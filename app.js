@@ -229,6 +229,7 @@ function setValue(targetId, dayKey, value) {
   else state.log[dayKey][targetId] = value;
   if (!Object.keys(state.log[dayKey]).length) delete state.log[dayKey];
   save();
+  Sync.markDay(dayKey);
 }
 
 /* Does this target apply on this date at all? Weekly targets are eligible on
@@ -355,6 +356,7 @@ function render() {
   if (ui.view === "insights") renderInsights();
   if (ui.view === "setup") renderSetup();
   renderNudge();
+  renderSyncChip();
 }
 
 /* The only "reminder" in v1: a pill in the header saying what is still open
@@ -783,6 +785,94 @@ function heatmap(keys) {
     </div>`;
 }
 
+/* --------------------------------------------------------------- sync --- */
+
+const SYNC_LABEL = {
+  off:        { text: "Local only",  tone: "" },
+  connecting: { text: "Connecting…", tone: "" },
+  syncing:    { text: "Syncing…",    tone: "" },
+  ready:      { text: "Sheet synced", tone: "good" },
+  error:      { text: "Sync problem", tone: "over" },
+  offline:    { text: "Offline",     tone: "warn" },
+};
+
+/* Called by sheets.js on every status change, so the header reflects reality
+   without the rest of the app having to know sync exists. */
+function renderSyncChip() {
+  const el = $("#sync-chip");
+  if (!el) return;
+  const i = Sync.info();
+
+  if (!i.configured) { el.classList.add("hidden"); return; }
+
+  const l = SYNC_LABEL[i.status] || SYNC_LABEL.off;
+  el.textContent = i.pending && i.status !== "syncing" ? `${l.text} · ${i.pending} to send` : l.text;
+  el.className = "sync-chip tone-" + (l.tone || "plain");
+  el.classList.remove("hidden");
+}
+
+function syncCardHTML() {
+  const i = Sync.info();
+
+  if (!i.configured) {
+    return `<div class="card data-card">
+        <h3>Google Sheets</h3>
+        <p class="muted">Not set up yet. Add a Google OAuth client ID to <code>config.js</code>
+        and this app will keep everything in a spreadsheet on your own Google Drive —
+        readable and editable by hand, in Sheets or Excel. See the README for the steps.</p>
+      </div>`;
+  }
+
+  const link = i.sheetId ? `https://docs.google.com/spreadsheets/d/${esc(i.sheetId)}` : "";
+  const when = i.lastSync
+    ? new Date(i.lastSync).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+    : "";
+
+  if (!i.connected) {
+    return `<div class="card data-card">
+        <h3>Google Sheets</h3>
+        <p class="muted">Connect your Google account and everything here lives in a spreadsheet
+        on your Drive. Edit a goal in the sheet and the app picks it up; tick something in the
+        app and the sheet updates.</p>
+        ${i.error ? `<p class="hint" style="color:var(--over)">${esc(i.error)}</p>` : ""}
+        <div class="btn-row">
+          <button class="btn btn-sm" data-act="sync-connect">
+            ${i.sheetId ? "Reconnect" : "Connect Google Sheets"}
+          </button>
+          ${i.sheetId ? `<button class="btn btn-sm" data-act="sync-sheet">Use a different sheet</button>` : ""}
+        </div>
+        ${i.sheetId ? `<p class="hint">Last connected sheet: <a href="${link}" target="_blank" rel="noopener">open in Sheets</a></p>` : ""}
+      </div>`;
+  }
+
+  return `<div class="card data-card">
+      <h3>Google Sheets <span class="sub">— ${esc((SYNC_LABEL[i.status] || {}).text || "")}${when ? ", " + esc(when) : ""}</span></h3>
+      <p class="muted">Your data lives in
+        <a href="${link}" target="_blank" rel="noopener">this spreadsheet</a>.
+        Three tabs: <b>Categories</b>, <b>Targets</b> and <b>Log</b>. Edit any of them by hand —
+        the app reads your changes the next time it pulls.</p>
+      ${i.pending ? `<p class="hint">${i.pending} change${i.pending > 1 ? "s" : ""} waiting to be sent.</p>` : ""}
+      ${i.error ? `<p class="hint" style="color:var(--over)">${esc(i.error)}</p>` : ""}
+      <div class="btn-row">
+        <button class="btn btn-sm" data-act="sync-pull">Pull from sheet</button>
+        <button class="btn btn-sm" data-act="sync-push">Push to sheet</button>
+        <button class="btn btn-sm" data-act="sync-sheet">Change sheet</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-sm btn-danger" data-act="sync-disconnect">Disconnect</button>
+      </div>
+    </div>`;
+}
+
+/* Accepts a full Sheets URL or a bare ID, because pasting the URL is what
+   anyone actually does. */
+function sheetIdFrom(text) {
+  const t = String(text || "").trim();
+  const m = /\/d\/([a-zA-Z0-9-_]{20,})/.exec(t);
+  if (m) return m[1];
+  return /^[a-zA-Z0-9-_]{20,}$/.test(t) ? t : null;
+}
+
 /* -------------------------------------------------------------- setup --- */
 
 /* A plain-English sentence for a target, used everywhere a target needs
@@ -849,6 +939,16 @@ function renderSetup() {
 
   $("#setup-list").innerHTML = html ||
     `<p class="empty">No categories yet. Tap <b>+ Category</b> to make your first one.</p>`;
+
+  const host = $("#sync-card");
+  if (host) host.innerHTML = syncCardHTML();
+
+  const blurb = $("#data-blurb");
+  if (blurb) {
+    blurb.textContent = Sync.info().connected
+      ? "Your sheet is the durable copy, so this is belt and braces — but an export is still the quickest way to snapshot everything as one file."
+      : "AhamMaxxing stores everything in this browser only. Export a backup before clearing your browser data or switching phones.";
+  }
 }
 
 /* ------------------------------------------------------------- modals --- */
@@ -1133,7 +1233,7 @@ function saveTargetForm(id) {
       order: siblings.length ? Math.max(...siblings.map((t) => t.order)) + 1 : 0,
     });
   }
-  save(); closeModal(); render();
+  save(); Sync.markMeta(); closeModal(); render();
   toast(id ? "Target updated" : "Target added");
 }
 
@@ -1149,7 +1249,7 @@ function saveCategoryForm(id) {
       order: state.categories.length ? Math.max(...state.categories.map((c) => c.order)) + 1 : 0,
     });
   }
-  save(); closeModal(); render();
+  save(); Sync.markMeta(); closeModal(); render();
 }
 
 function deleteCategory(id) {
@@ -1167,7 +1267,7 @@ function deleteCategory(id) {
     if (!Object.keys(state.log[k]).length) delete state.log[k];
   });
   state.categories = state.categories.filter((c) => c.id !== id);
-  save(); render();
+  save(); Sync.markMeta(); render();
 }
 
 function deleteTarget(id) {
@@ -1178,7 +1278,7 @@ function deleteTarget(id) {
     delete state.log[k][id];
     if (!Object.keys(state.log[k]).length) delete state.log[k];
   });
-  save(); render();
+  save(); Sync.markMeta(); render();
 }
 
 /* ------------------------------------------------------------ plumbing --- */
@@ -1205,7 +1305,7 @@ function importBackup(file) {
       }
       if (!confirm("Replace everything currently in AhamMaxxing with this backup?")) return;
       state = { ...blankState(), ...data };
-      save(); render();
+      save(); Sync.markMeta(); render();
       toast("Backup restored");
     } catch (e) {
       toast("That file is not an AhamMaxxing backup");
@@ -1228,7 +1328,7 @@ const ACTIONS = {
   "target-new":   (d) => targetEditor(null, d.cat),
   "target-edit":  (d) => targetEditor(targetById(d.id)),
   "target-del":   (d) => deleteTarget(d.id),
-  "target-pause": (d) => { const t = targetById(d.id); t.archived = !t.archived; save(); render(); },
+  "target-pause": (d) => { const t = targetById(d.id); t.archived = !t.archived; save(); Sync.markMeta(); render(); },
   "target-save":  (d) => saveTargetForm(d.id || null),
 
   "cat-edit": (d) => categoryEditor(catById(d.id)),
@@ -1242,12 +1342,43 @@ const ACTIONS = {
       ...s, id: uid("t_"), catId: d.cat, archived: false, days: [...ALL_DAYS],
       order: siblings.length ? Math.max(...siblings.map((t) => t.order)) + 1 : 0,
     });
-    save(); render();
+    save(); Sync.markMeta(); render();
     toast(`Added "${s.name}"`);
   },
 
   "amount-save": (d) => saveAmount(d.id, d.day),
   "modal-close": () => closeModal(),
+
+  "sync-connect": () => Sync.connect({ interactive: true }),
+  "sync-pull": () => {
+    if (!confirm("Pull from the sheet? Anything on this device that has not been sent yet will be replaced.")) return;
+    Sync.pullNow();
+  },
+  "sync-push": () => Sync.pushNow(),
+  "sync-disconnect": () => {
+    if (!confirm("Disconnect from Google? Your data stays in the sheet and on this device — they just stop syncing.")) return;
+    Sync.disconnect({ forget: true });
+  },
+  "sync-sheet": () => {
+    openModal(`
+      <h3>Connect a spreadsheet</h3>
+      <div class="field">
+        <label for="sheet-url">Sheet link or ID</label>
+        <input id="sheet-url" class="input" placeholder="https://docs.google.com/spreadsheets/d/…" />
+      </div>
+      <p class="hint">Paste the address of a Google Sheet you can edit. If it is empty, this
+      app will set up its three tabs; if it already holds AhamMaxxing data, that data wins.</p>
+      <div class="modal-actions">
+        <button class="btn" data-act="modal-close">Cancel</button>
+        <button class="btn btn-primary" data-act="sync-sheet-save">Connect</button>
+      </div>`);
+  },
+  "sync-sheet-save": () => {
+    const id = sheetIdFrom($("#sheet-url").value);
+    if (!id) { toast("That does not look like a Sheets link"); return; }
+    closeModal();
+    Sync.connect({ interactive: true, sheetId: id });
+  },
 };
 
 function wire() {
@@ -1294,6 +1425,12 @@ function wire() {
 
   $("#welcome-start").addEventListener("click", () => start(seededState()));
   $("#welcome-blank").addEventListener("click", () => start(blankState()));
+  $("#welcome-google").addEventListener("click", () => {
+    // Seed first, so an empty sheet gets the suggested plan rather than nothing;
+    // a sheet that already holds data replaces it on connect.
+    start(seededState());
+    Sync.connect({ interactive: true });
+  });
 
   /* Left open overnight, the app would otherwise still be showing yesterday. */
   document.addEventListener("visibilitychange", () => {
@@ -1318,7 +1455,12 @@ function start(s) {
 
 function boot() {
   wire();
+  Sync.init();
   ui._lastSeen = todayKey();
+  // Offering to connect Google Sheets before a client ID exists would only
+  // lead to an error, so the button appears once config.js is filled in.
+  if (!Sync.info().configured) $("#welcome-google").classList.add("hidden");
+
   const saved = load();
   if (saved) {
     state = saved;

@@ -29,8 +29,10 @@
   <h1 class="wordmark">AhamMaxxing</h1>
   <p class="tagline">Set the targets. Own the week.</p>
   <button id="welcome-start" class="btn btn-primary">Start with a suggested plan</button>
+  <button id="welcome-google" class="btn btn-outline">Connect Google Sheets</button>
   <button id="welcome-blank" class="btn btn-quiet">Start from scratch</button>
-  <p class="welcome-note">Everything stays on this device. Nothing is uploaded anywhere.</p>
+  <p class="welcome-note">Works entirely on this device. Connect Google Sheets and your data
+  lives in a spreadsheet on your own Drive, which you can read and edit by hand.</p>
 </section>
 
 <!-- ===================== Main app ===================== -->
@@ -45,6 +47,7 @@
       <span class="brand-name">AhamMaxxing</span>
     </div>
     <div class="topbar-right">
+      <span id="sync-chip" class="sync-chip hidden" role="status"></span>
       <span id="nudge-pill" class="nudge-pill hidden" role="status"></span>
     </div>
   </header>
@@ -117,10 +120,11 @@
         <button id="add-category" class="btn btn-sm">+ Category</button>
       </div>
       <div id="setup-list" class="setup-list"></div>
+      <div id="sync-card"></div>
 
       <div class="card data-card">
         <h3>Your data</h3>
-        <p class="muted">AhamMaxxing stores everything in this browser only. Export a backup before clearing your browser data or switching phones.</p>
+        <p class="muted" id="data-blurb"></p>
         <div class="btn-row">
           <button id="export-btn" class="btn btn-sm">Export backup</button>
           <button id="import-btn" class="btn btn-sm">Import backup</button>
@@ -150,6 +154,9 @@
 
 <div id="toast" class="toast hidden" role="status"></div>
 
+<script src="config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="sheets.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

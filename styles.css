@@ -133,6 +133,31 @@ html, body {
 .brand-svg .mark-ring { stroke-width: 8; }
 .brand-name { font-family: var(--font-head); font-weight: 700; font-size: 1.15rem; }
 
+.sync-chip {
+  font-size: .7rem; font-weight: 600; color: var(--ink-2);
+  background: var(--paper-sunk); border-radius: 999px; padding: 5px 10px;
+  border: 0; cursor: default; white-space: nowrap;
+}
+.sync-chip.tone-good { color: var(--good); background: var(--good-soft); }
+.sync-chip.tone-warn { color: var(--warn); background: var(--warn-soft); }
+.sync-chip.tone-over { color: var(--over); background: var(--over-soft); }
+
+.btn-outline {
+  width: min(320px, 100%); margin-top: 8px;
+  border-color: var(--ink); color: var(--ink); background: transparent;
+}
+
+.card code {
+  background: var(--paper-sunk); border-radius: 5px;
+  padding: 1px 5px; font-size: .82em;
+}
+.card a { color: var(--accent); }
+
+.topbar-right {
+  display: flex; align-items: center; gap: 6px;
+  flex-wrap: wrap; justify-content: flex-end;
+}
+
 .nudge-pill {
   font-size: .74rem; font-weight: 600; color: var(--warn);
   background: var(--warn-soft); border-radius: 999px; padding: 5px 11px;

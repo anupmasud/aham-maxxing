@@ -1,9 +1,10 @@
 /* AhamMaxxing service worker — caches the app shell so the app opens instantly and
-   works with no signal. There is no API to cache: all data lives in
-   localStorage, written by app.js. */
-const CACHE = "aham-maxxing-shell-v1";
+   works with no signal. Only the shell is cached — Google's identity script
+   and the Sheets API are cross-origin and deliberately fall through to the
+   network, so a stale token or a stale row is never served from here. */
+const CACHE = "aham-maxxing-shell-v2";
 const SHELL = [
-  ".", "index.html", "styles.css", "app.js",
+  ".", "index.html", "styles.css", "app.js", "sheets.js", "config.js",
   "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png",
 ];
 
