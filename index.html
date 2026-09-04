@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AhamMaxxing — Targets &amp; Habits</title>
+  <meta name="description" content="Set targets by category, check them off daily, see how the week went." />
+  <meta name="theme-color" content="#FBF7F0" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ===================== Welcome / first run ===================== -->
+<section id="welcome-view" class="welcome hidden">
+  <div class="welcome-mark" aria-hidden="true">
+    <svg viewBox="0 0 100 100" class="mark-svg">
+      <circle cx="50" cy="50" r="40" class="mark-ring" />
+      <path d="M32 51 L44 63 L69 38" class="mark-tick" />
+    </svg>
+  </div>
+  <h1 class="wordmark">AhamMaxxing</h1>
+  <p class="tagline">Set the targets. Own the week.</p>
+  <button id="welcome-start" class="btn btn-primary">Start with a suggested plan</button>
+  <button id="welcome-blank" class="btn btn-quiet">Start from scratch</button>
+  <p class="welcome-note">Everything stays on this device. Nothing is uploaded anywhere.</p>
+</section>
+
+<!-- ===================== Main app ===================== -->
+<div id="app-view" class="app hidden">
+
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 100 100" class="brand-svg" aria-hidden="true">
+        <circle cx="50" cy="50" r="40" class="mark-ring" />
+        <path d="M32 51 L44 63 L69 38" class="mark-tick" />
+      </svg>
+      <span class="brand-name">AhamMaxxing</span>
+    </div>
+    <div class="topbar-right">
+      <span id="nudge-pill" class="nudge-pill hidden" role="status"></span>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ---------- TODAY ---------- -->
+    <section id="today-view" class="view">
+      <div class="daybar">
+        <button id="day-prev" class="icon-btn" aria-label="Previous day">‹</button>
+        <div class="daybar-mid">
+          <h2 id="day-title" class="day-title">Today</h2>
+          <p id="day-sub" class="day-sub"></p>
+        </div>
+        <button id="day-next" class="icon-btn" aria-label="Next day">›</button>
+      </div>
+
+      <div class="dayscore">
+        <div class="ring-wrap">
+          <svg viewBox="0 0 120 120" class="ring">
+            <circle cx="60" cy="60" r="52" class="ring-track" />
+            <circle id="ring-fill" cx="60" cy="60" r="52" class="ring-fill" />
+          </svg>
+          <div class="ring-label">
+            <strong id="ring-pct">0%</strong>
+            <span id="ring-sub">0 of 0</span>
+          </div>
+        </div>
+        <div class="dayscore-side">
+          <div id="week-strip" class="week-strip"></div>
+          <p id="dayscore-note" class="dayscore-note"></p>
+        </div>
+      </div>
+
+      <div id="today-list" class="cat-list"></div>
+      <p id="today-empty" class="empty hidden">Nothing scheduled for this day. Add targets in <b>Setup</b>.</p>
+    </section>
+
+    <!-- ---------- WEEK ---------- -->
+    <section id="week-view" class="view hidden">
+      <div class="daybar">
+        <button id="week-prev" class="icon-btn" aria-label="Previous week">‹</button>
+        <div class="daybar-mid">
+          <h2 id="week-title" class="day-title">This week</h2>
+          <p id="week-sub" class="day-sub"></p>
+        </div>
+        <button id="week-next" class="icon-btn" aria-label="Next week">›</button>
+      </div>
+      <div id="week-grid" class="week-grid-wrap"></div>
+      <p id="week-empty" class="empty hidden">No targets yet. Add some in <b>Setup</b>.</p>
+    </section>
+
+    <!-- ---------- INSIGHTS ---------- -->
+    <section id="insights-view" class="view hidden">
+      <div class="section-head">
+        <h2 class="day-title">Insights</h2>
+        <select id="insights-range" class="select-sm" aria-label="Time range">
+          <option value="28">Last 4 weeks</option>
+          <option value="84">Last 12 weeks</option>
+          <option value="365">Last year</option>
+        </select>
+      </div>
+      <div id="insights-body"></div>
+    </section>
+
+    <!-- ---------- SETUP ---------- -->
+    <section id="setup-view" class="view hidden">
+      <div class="section-head">
+        <h2 class="day-title">Setup</h2>
+        <button id="add-category" class="btn btn-sm">+ Category</button>
+      </div>
+      <div id="setup-list" class="setup-list"></div>
+
+      <div class="card data-card">
+        <h3>Your data</h3>
+        <p class="muted">AhamMaxxing stores everything in this browser only. Export a backup before clearing your browser data or switching phones.</p>
+        <div class="btn-row">
+          <button id="export-btn" class="btn btn-sm">Export backup</button>
+          <button id="import-btn" class="btn btn-sm">Import backup</button>
+          <input id="import-file" type="file" accept="application/json" class="hidden" />
+        </div>
+        <div class="btn-row">
+          <button id="reset-btn" class="btn btn-sm btn-danger">Erase everything</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar" role="tablist" aria-label="Sections">
+    <button class="tab active" data-view="today" role="tab"><span class="tab-ico">◉</span>Today</button>
+    <button class="tab" data-view="week" role="tab"><span class="tab-ico">▦</span>Week</button>
+    <button class="tab" data-view="insights" role="tab"><span class="tab-ico">◔</span>Insights</button>
+    <button class="tab" data-view="setup" role="tab"><span class="tab-ico">⚙</span>Setup</button>
+  </nav>
+</div>
+
+<!-- ===================== Modal host ===================== -->
+<div id="modal-host" class="modal-host hidden" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" data-close="1"></div>
+  <div class="modal" id="modal-panel"></div>
+</div>
+
+<div id="toast" class="toast hidden" role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
