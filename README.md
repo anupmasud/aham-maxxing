@@ -1,5 +1,7 @@
 # AhamMaxxing
 
+**Live at [anupmasud.github.io/aham-maxxing](https://anupmasud.github.io/aham-maxxing/)**
+
 Set targets by category, check them off daily, and see how the week actually went.
 
 *Aham* — Sanskrit for "I". You define the categories, you set the targets, you
@@ -62,8 +64,13 @@ the sheet and the app picks it up on its next pull.
 1. Create a project (or reuse one) and enable the **Google Sheets API**.
 2. Under *APIs & Services → Credentials*, create an **OAuth client ID** of type
    **Web application**.
-3. Add every origin you'll serve the app from to **Authorised JavaScript origins**:
-   `http://localhost:8123` and `https://<your-username>.github.io`.
+3. Add every origin you'll serve the app from to **Authorised JavaScript origins**.
+   For this app that is exactly these two — origins only, no paths:
+
+   ```
+   https://anupmasud.github.io
+   http://localhost:8123
+   ```
 4. While the consent screen is in *Testing*, add your own Google address under
    **Test users**, or sign-in will be refused.
 
@@ -147,9 +154,13 @@ No dependencies, no test runner.
 
 ## Deploying
 
-Push to GitHub and enable Pages on the repository root. Bump `CACHE` in `sw.js`
-whenever you change the shell files, or returning visitors keep the old ones.
-Remember to add the Pages URL to the OAuth client's authorised origins.
+Already deployed: pushing to `main` republishes
+[anupmasud.github.io/aham-maxxing](https://anupmasud.github.io/aham-maxxing/)
+within a minute or two.
+
+Bump `CACHE` in `sw.js` whenever you change `index.html`, `styles.css`, `app.js`,
+`sheets.js` or `config.js` — otherwise the service worker keeps serving the old
+files to anyone who has opened the app before.
 
 ## Reminders
 

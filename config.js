@@ -6,8 +6,8 @@
                   You can reuse the client ID from 33&Me if you prefer — paste
                   it below — but you must then add this app's origins to that
                   client's "Authorised JavaScript origins" in Google Cloud:
+                      https://anupmasud.github.io
                       http://localhost:8123
-                      https://<your-github-username>.github.io
                   Client IDs are not secrets (they ship in the page); it is the
                   origin allow-list on Google's side that protects them.
 
