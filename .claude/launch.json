@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "aham_maxxing",
+      "name": "aham-maxxing",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8123", "--directory", "/Users/anupma/ClaudeCode/aham_maxxing"],
+      "runtimeArgs": ["-m", "http.server", "8123", "--directory", "/Users/anupma/ClaudeCode/aham-maxxing"],
       "port": 8123
     }
   ]
